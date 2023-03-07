@@ -13,7 +13,8 @@ protocol ContinentManagerDelegate {
 struct ContinentManager {
     
     let continentURL = "https://run.mocky.io/v3/574b3feb-c5a5-4392-b867-7ea388200a8d"
-    
+    let filepath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.pList")
+   
     let key = "SavedData"
     var delegate: ContinentManagerDelegate?
     func performRequest(continentURL: String) {
@@ -40,16 +41,20 @@ struct ContinentManager {
         do {
             let  decodedData = try decoder.decode(Result.self, from: continentData)
             var continentName1 = [String : [Country]]()
-            // User default
-             let encoder = JSONEncoder()
-             let encoded = try? encoder.encode(decodedData)
-             let defaults = UserDefaults.standard
-            defaults.set(encoded, forKey: key)
-            if let SavedData = defaults.object(forKey: key) as? Data {
-            let decodedsavedData = JSONDecoder()
-            let finalData = try? decodedsavedData.decode(Result.self, from: SavedData)
-                print(finalData?.continents as Any)
-        }
+            //PList
+           // print(filepath)
+            let encoder = PropertyListEncoder()
+            do {
+                let data = try encoder.encode(decodedData)
+                try data.write(to:filepath! )
+            } catch {
+                print("error")
+            }
+            let decodedata = (try? Data(contentsOf: filepath!))
+            let decoderplist = PropertyListDecoder()
+            let finaldata = try decoderplist.decode(Result.self, from: decodedata!)
+            print(finaldata) //plist decoded data
+            
             for objContinent in decodedData.continents {
                 continentName1[objContinent.continentName] = objContinent.country
                 
